@@ -1,4 +1,4 @@
-package dialog
+package dialogue
 
 import (
 	"errors"
