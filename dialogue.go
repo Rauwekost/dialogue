@@ -1,12 +1,25 @@
 package dialogue
 
+/*
+#include <termios.h>
+#include <unistd.h>
+
+void flushtty() {
+    tcflush(0, TCIFLUSH);
+}
+*/
+import "C"
+
 import (
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
+
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -67,6 +80,7 @@ func Choice(question string, options []string) int {
 
 //readline reads input from the user byte by byte
 func readline() (value string, err error) {
+	flush()
 	var valb []byte
 	var n int
 	b := make([]byte, 1)
@@ -103,4 +117,18 @@ func hasString(h []string, n string) bool {
 		return true
 	}
 	return false
+}
+
+//flush clears stdin
+func flush() error {
+	if runtime.GOOS == "windows" {
+		C.flushtty()
+		return nil
+	}
+	_, _, err := unix.Syscall(unix.SYS_IOCTL, 0, unix.TCIOFLUSH, 0) // linux only
+	if err != 0 {
+		panic(err)
+	}
+
+	return nil
 }
